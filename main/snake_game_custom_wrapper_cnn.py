@@ -82,8 +82,8 @@ class SnakeEnv(gym.Env):
 
         return obs, reward, self.done, False, info
 
-    def render(self, mode='human'):
-        return self.game.render(mode)
+    def render(self):
+        return self.game.render()
 
     def _generate_observation(self):
         obs = np.zeros((self.game.board_size, self.game.board_size), dtype=np.uint8)

@@ -34,7 +34,7 @@ min_score = 1e9
 max_score = 0
 
 for episode in range(NUM_EPISODE):
-    obs = env.reset()
+    obs, _ = env.reset()
     episode_reward = 0
     done = False
     
@@ -46,11 +46,11 @@ for episode in range(NUM_EPISODE):
     retry_limit = 9
     print(f"=================== Episode {episode + 1} ==================")
     while not done:
-        action, _ = model.predict(obs, action_masks=env.get_action_mask())
-        prev_mask = env.get_action_mask()
+        action, _ = model.predict(obs, action_masks=env.get_action_mask(env))
+        prev_mask = env.get_action_mask(env)
         prev_direction = env.game.direction
         num_step += 1
-        obs, reward, done, info = env.step(action)
+        obs, reward, done, truncated, info = env.step(action)
 
         if done:
             if info["snake_size"] == env.game.grid_size:
