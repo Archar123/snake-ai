@@ -1,11 +1,16 @@
 import os
+import sys
 import random
+
 import torch
 from sb3_contrib import MaskablePPO
 from stable_baselines3.common.vec_env import DummyVecEnv
+from stable_baselines3.common.callbacks import CheckpointCallback
 #from stable_baselines3.common.monitor import Monitor
+
 from gymnasium.wrappers import RecordEpisodeStatistics
 from snake_game_custom_wrapper_cnn import SnakeEnv, ActionMasker
+
 
 if torch.backends.mps.is_available():
     NUM_ENV = 32 * 2
@@ -86,8 +91,23 @@ def main():
         save_dir = "trained_models_cnn"
     os.makedirs(save_dir, exist_ok=True)
 
-    # Train the model
-    model.learn(total_timesteps=1e6, use_masking=False)
+    checkpoint_interval = 15625 # checkpoint_interval * num_envs = total_steps_per_checkpoint
+    checkpoint_callback = CheckpointCallback(save_freq=checkpoint_interval, save_path=save_dir, name_prefix="ppo_snake")
+
+    # Writing the training logs from stdout to a file
+    original_stdout = sys.stdout
+    log_file_path = os.path.join(save_dir, "training_log.txt")
+    with open(log_file_path, 'w') as log_file:
+        sys.stdout = log_file
+
+        # Train the model
+        model.learn(total_timesteps=1e8, use_masking=False, callback=[checkpoint_callback])
+
+        env.close()
+
+    # Restore stdout
+    sys.stdout = original_stdout
+
     # Save the final model
     model.save(os.path.join(save_dir, "ppo_snake_final.zip"))
 
